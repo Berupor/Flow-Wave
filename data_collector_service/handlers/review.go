@@ -13,29 +13,30 @@ import (
 func CreateReview(service services.EventService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var review models.Review
-
 		userID, err := getUserID(c)
+
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := c.ShouldBindJSON(&review); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if err := c.BindJSON(&review); err != nil || review.Validate() != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "incorrect review data"})
 			return
 		}
 
-		review.Author_id = userID
+		review.AuthorID = userID
 
 		err = service.Produce(review)
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		c.String(http.StatusCreated, "Message sent")
 	}
 }
+
 func getUserID(c *gin.Context) (int, error) {
 	userIDInterface, exists := c.Get("user_id")
 

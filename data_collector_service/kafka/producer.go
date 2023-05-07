@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 
 	"github.com/Shopify/sarama"
 )
@@ -49,6 +49,6 @@ func (p *KafkaProducer) Produce(message interface{}) error {
 		return err
 	}
 
-	fmt.Printf("Message stored in topic(%s)/partition(%d)/offset(%d)\n", p.Topic, partition, offset)
+	log.Printf("Message stored in topic(%s)/partition(%d)/offset(%d)\n", p.Topic, partition, offset)
 	return nil
 }

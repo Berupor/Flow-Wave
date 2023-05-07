@@ -1,40 +1,22 @@
 package main
 
 import (
-	"fmt"
-
-	"data-collector/handlers"
+	"data-collector/core"
 	"data-collector/kafka"
-	"data-collector/middlewares"
 	"data-collector/services"
-
-	"github.com/gin-gonic/gin"
+	"log"
 )
 
 func main() {
-	router := gin.Default()
+	brokers, topic, jwtSecret := core.LoadConfig()
 
-	brokers := []string{"localhost:9092"}
-	topic := "reviews"
-
-	messageProducer, err := kafka.NewKafkaProducer(
-		brokers, topic,
-	)
-
+	messageProducer, err := kafka.NewKafkaProducer(brokers, topic)
 	if err != nil {
-		fmt.Printf("failed to create Kafka producer: %s\n", err)
+		log.Fatalf("failed to create Kafka producer: %s", err)
 	}
 
-	eventService := services.NewEventService(
-		*messageProducer,
-	)
+	eventService := services.NewEventService(*messageProducer)
 
-	secured := router.Group("api")
-	secured.Use(middlewares.JWTAuthMiddleware())
-	{
-		secured.POST("/review", handlers.CreateReview(*eventService))
-	}
-
-	// r.POST("/review", handlers.CreateReview(*eventService))
+	router := core.SetupRouter(eventService, jwtSecret)
 	router.Run()
 }
