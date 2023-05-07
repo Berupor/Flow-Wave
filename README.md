@@ -12,7 +12,7 @@ The service architecture consists of the following components:
 
 ### Data Collectors (Go)
 
-Multiple data collectors in Go have been developed for different platforms. They extract reviews and send them to a message queue Kafka.
+Multiple data collectors in Go for different platforms. They extract reviews and send them to a message queue Kafka.
 
 ### Kafka
 
@@ -32,6 +32,6 @@ ClickHouse is employed for aggregating and storing analytics data. The ETL servi
 
 ### API (Go)
 
-A RESTful API in Go has been developed to provide access to analytics data and reports. This API can be used to create a web interface or integrate with other services.
+A RESTful API in Go provides access to analytics data and reports. This API can be used to create a web interface or integrate with other services.
 
 The use of Go and these advanced technologies makes this service scalable, efficient, and powerful. This service is an ideal solution for businesses looking to improve their customer experience, monitor their product reputation, and gain valuable insights from customer feedback.
