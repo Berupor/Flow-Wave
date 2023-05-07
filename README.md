@@ -1,6 +1,8 @@
-# Product Reviews Processing and Analysis Service (Developing)
+# Flow Wave(Developing)
 
-Product Reviews Processing and Analysis Service is a scalable and efficient service that collects product reviews from various platforms, performs sentiment analysis, categorization, and provides aggregated data for analytics and reporting.
+Flow Wave is a Product Reviews Processing and Analysis Service currently in development. We're working on making it scalable, efficient, and user-friendly.
+
+Service collects product reviews from various platforms, performs sentiment analysis, categorization, and provides aggregated data for analytics and reporting.
 
 ## Architecture
 
