@@ -2,13 +2,16 @@ package consumer
 
 import (
 	"context"
+
+	"data-processing/models"
+	"encoding/json"
 	"log"
 
 	"github.com/Shopify/sarama"
 )
 
 type Handler interface {
-	HandleMessage(message string) error
+	HandleMessage(event models.Review) error
 }
 
 type KafkaConsumer struct {
@@ -57,12 +60,24 @@ func (c *KafkaConsumer) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sar
 	for msg := range claim.Messages() {
 		log.Printf("Message received: %s", string(msg.Value))
 
-		err := c.Handler.HandleMessage(string(msg.Value))
+		var event models.Review
+		err := json.Unmarshal(msg.Value, &event)
+		if err != nil {
+			log.Printf("Error decoding JSON message: %v", err)
+			continue
+		}
+
+		err = c.Handler.HandleMessage(event)
 		if err != nil {
 			log.Printf("Error processing message: %v", err)
 		} else {
 			sess.MarkMessage(msg, "")
 		}
 	}
+
 	return nil
+}
+
+func (c *KafkaConsumer) Close() error {
+	return c.ConsumerGroup.Close()
 }
