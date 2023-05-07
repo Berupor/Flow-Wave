@@ -6,7 +6,7 @@ Service collects product reviews from various platforms, performs sentiment anal
 
 ## Architecture
 
-<img src="Architecture/Diagram.png">
+<img src="architecture/Diagram.png">
 
 The service architecture consists of the following components:
 
