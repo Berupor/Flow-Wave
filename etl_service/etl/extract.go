@@ -2,32 +2,33 @@ package etl
 
 import (
 	"context"
-	"log"
-	"time"
-
+	"etl/storage"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 
 	"etl/models/mongodb"
 )
 
 type Extractor interface {
-	GetReviews() ([]mongodb.Review, error)
+	GetReviews(ctx context.Context, dbName string, collectionName string) ([]mongodb.Review, error)
 }
 
 type mongoExtractor struct {
-	client *mongo.Client
+	Client       *mongo.Client
+	RedisStorage *storage.RedisStorage
 }
 
-func NewMongoExtractor(mongoURI string) Extractor {
+func NewMongoExtractor(mongoURI string, redisStorage *storage.RedisStorage) Extractor {
 	client, err := connectToMongoDB(mongoURI)
 	if err != nil {
 		log.Fatalf("faliled to connect to mongodb: %v", err)
 	}
 
 	return &mongoExtractor{
-		client: client,
+		Client:       client,
+		RedisStorage: redisStorage,
 	}
 }
 
@@ -46,13 +47,18 @@ func connectToMongoDB(mongoUri string) (*mongo.Client, error) {
 	return client, nil
 }
 
-func (me *mongoExtractor) GetReviews() ([]mongodb.Review, error) {
-	collection := me.client.Database("database_name").Collection("reviews")
+func (me *mongoExtractor) GetReviews(ctx context.Context, dbName string, collectionName string) ([]mongodb.Review, error) {
+	collection := me.Client.Database(dbName).Collection(collectionName)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	lastExtractedTimestamp, err := me.RedisStorage.GetLastExtractedTimestamp(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	cursor, err := collection.Find(ctx, bson.M{})
+	filter := bson.M{"timestamp": bson.M{"$gt": lastExtractedTimestamp}}
+	findOptions := options.Find().SetLimit(100).SetSort(bson.M{"timestamp": 1})
+
+	cursor, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +68,13 @@ func (me *mongoExtractor) GetReviews() ([]mongodb.Review, error) {
 	var reviews []mongodb.Review
 	if err = cursor.All(ctx, &reviews); err != nil {
 		return nil, err
+	}
+
+	if len(reviews) > 0 {
+		newTimestamp := reviews[len(reviews)-1].Timestamp.Unix()
+		if err := me.RedisStorage.UpdateLastExtractedTimestamp(ctx, newTimestamp); err != nil {
+			return nil, err
+		}
 	}
 
 	return reviews, nil

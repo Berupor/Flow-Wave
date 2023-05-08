@@ -55,14 +55,23 @@ services:
     ports:
       - "27017:27017"
 
-  clickhouse-node1:
-    image: yandex/clickhouse-server:21.7.4
-    container_name: clickhouse-node1
-    hostname: clickhouse-node1
-    expose:
-      - "8123"
-      - "9000"
-    depends_on:
-      - zookeeper
+  cache:
+    container_name: redis_db
+    image: redis:7.0.5-alpine
+    hostname: redis
     ports:
-      - "8123:8123"
+      - "6379:6379"
+    restart: always
+
+
+#  clickhouse-node1:
+#    image: yandex/clickhouse-server:21.7.4
+#    container_name: clickhouse-node1
+#    hostname: clickhouse-node1
+#    expose:
+#      - "8123"
+#      - "9000"
+#    depends_on:
+#      - zookeeper
+#    ports:
+#      - "8123:8123"
