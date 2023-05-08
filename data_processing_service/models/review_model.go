@@ -21,6 +21,7 @@ type ReviewCreate struct {
 	Review    string    `json:"review"`
 	Timestamp time.Time `json:"timestamp"`
 
-	Keywords  []string `json:"keywords"`
-	Sentiment float64  `json:"sentiment"`
+	Keywords  []string         `json:"keywords"`
+	Sentences []WeightSentence `json:"sentences"`
+	Sentiment float64          `json:"sentiment"`
 }

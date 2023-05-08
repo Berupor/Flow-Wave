@@ -6,6 +6,6 @@ type Sentence struct {
 }
 
 type WeightSentence struct {
-	Text   string
-	Weight float64
+	Text   string  `json:"text"`
+	Weight float64 `json:"weight"`
 }

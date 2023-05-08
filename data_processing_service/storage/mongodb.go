@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"log"
 
 	"data-processing/models"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -29,8 +30,14 @@ func NewMongoStorage(uri string, dbName string, collectionName string) (Storage,
 }
 
 func (m *MongoStorage) CreateReview(review models.ReviewCreate) error {
-	_, err := m.Collection.InsertOne(context.Background(), review)
-	return err
+	objectID, err := m.Collection.InsertOne(context.Background(), review)
+	if err != nil {
+		log.Printf("Error creating review: %v", err)
+		return err
+	}
+
+	log.Printf("Review created with ID %v", objectID)
+	return nil
 }
 
 func (m *MongoStorage) FindReviews() ([]models.Review, error) {

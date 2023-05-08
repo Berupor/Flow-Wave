@@ -45,3 +45,12 @@ services:
       JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
     depends_on:
       - "kafka"
+
+  mongodb:
+    image: mongo:4.2-rc-bionic
+    hostname: mongodb
+    container_name: mongodb
+    expose:
+      - "27017"
+    ports:
+      - "27017:27017"

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"data-processing/storage"
 	"log"
 	"os"
 	"os/signal"
@@ -13,8 +14,14 @@ import (
 
 func main() {
 	brokers, topics, groupID := core.LoadConfig()
+	connectionUri, dbName, collection := core.LoadMongoConfig()
 
-	handler := &processor.SimpleHandler{}
+	mongo, err := storage.NewMongoStorage(connectionUri, dbName, collection)
+	if err != nil {
+		log.Fatalf("error creating mongo connection: %v", err)
+	}
+
+	handler := &processor.SimpleHandler{Storage: mongo}
 	kafkaConsumer, err := consumer.NewKafkaConsumer(brokers, groupID, topics, handler)
 	if err != nil {
 		log.Fatalf("error creating Kafka consumer: %v", err)
