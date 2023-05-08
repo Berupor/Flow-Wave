@@ -3,18 +3,23 @@ package processor
 import (
 	"data-processing/models"
 	"data-processing/storage"
+	"log"
 )
 
-type SimpleHandler struct {
+type ReviewAnalyzerHandler struct {
 	Storage storage.Storage
 }
 
-func (h *SimpleHandler) HandleMessage(event models.Review) error {
-	keywords, _ := ExtractKeyword(event.Review, 3)
+func (h *ReviewAnalyzerHandler) HandleMessage(event models.Review) error {
+	keywords, err := ExtractKeyword(event.Review, 3)
+	if err != nil {
+		log.Printf("Error extracting keywords: %v", err)
+	}
 
 	sentiment := AnalyzeSentiment(event.Review)
 
 	sentences := ExtractSentencesAdvance(event.Review)
+
 	rankedSentences := TextRank(sentences, "english", 0.85, 0.0001, 100)
 	topSentences := TopNSentences(rankedSentences, 2)
 
@@ -30,7 +35,10 @@ func (h *SimpleHandler) HandleMessage(event models.Review) error {
 		Sentences: topSentences,
 	}
 
-	h.Storage.CreateReview(reviewCreate)
+	if err := h.Storage.CreateReview(reviewCreate); err != nil {
+		log.Printf("Error adding review: %v", err)
+		return err
+	}
 
 	return nil
 }

@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	brokers, topics, groupID := core.LoadConfig()
+	brokers, topics, groupID := core.LoadKafkaConfig()
 	connectionUri, dbName, collection := core.LoadMongoConfig()
 
 	mongo, err := storage.NewMongoStorage(connectionUri, dbName, collection)
@@ -21,17 +21,17 @@ func main() {
 		log.Fatalf("error creating mongo connection: %v", err)
 	}
 
-	handler := &processor.SimpleHandler{Storage: mongo}
+	handler := &processor.ReviewAnalyzerHandler{Storage: mongo}
 	kafkaConsumer, err := consumer.NewKafkaConsumer(brokers, groupID, topics, handler)
 	if err != nil {
 		log.Fatalf("error creating Kafka consumer: %v", err)
 	}
 
-	// Ждем сигналов завершения работы приложения
+	// Waiting for signals to terminate the application
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-	// Блокируем выполнение main, пока не получим сигнал остановки
+	// block the execution of main until we receive a stop signal
 	<-signals
 
 	log.Println("shutting down the service...")
