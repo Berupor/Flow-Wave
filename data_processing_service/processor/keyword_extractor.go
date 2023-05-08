@@ -47,7 +47,7 @@ func ExtractKeyword(text string, n int) ([]string, error) {
 	}
 
 	// Extract keywords
-	keywords := []string{}
+	var keywords []string
 	for _, tok := range doc.Tokens() {
 		if tok.Tag == "NN" || tok.Tag == "NNS" || tok.Tag == "NNP" || tok.Tag == "NNPS" {
 			keywords = append(keywords, strings.ToLower(tok.Text))

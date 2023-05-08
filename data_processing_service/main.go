@@ -17,7 +17,7 @@ func main() {
 	handler := &processor.SimpleHandler{}
 	kafkaConsumer, err := consumer.NewKafkaConsumer(brokers, groupID, topics, handler)
 	if err != nil {
-		log.Fatalf("Error creating Kafka consumer: %v", err)
+		log.Fatalf("error creating Kafka consumer: %v", err)
 	}
 
 	// Ждем сигналов завершения работы приложения
@@ -27,9 +27,9 @@ func main() {
 	// Блокируем выполнение main, пока не получим сигнал остановки
 	<-signals
 
-	log.Println("Shutting down the service...")
+	log.Println("shutting down the service...")
 
 	if err := kafkaConsumer.Close(); err != nil {
-		log.Printf("Error closing Kafka consumer: %v", err)
+		log.Printf("error closing Kafka consumer: %v", err)
 	}
 }

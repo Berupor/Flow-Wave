@@ -5,6 +5,6 @@ import (
 )
 
 type Storage interface {
-	CreateReview(review models.Review) error
+	CreateReview(review models.ReviewCreate) error
 	FindReviews() ([]models.Review, error)
 }

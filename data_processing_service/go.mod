@@ -4,8 +4,10 @@ go 1.20
 
 require (
 	github.com/Shopify/sarama v1.38.1
+	github.com/grassmudhorses/vader-go v0.0.0-20191126145716-003d5aacdb71
 	github.com/jdkato/prose/v2 v2.0.0
 	github.com/joho/godotenv v1.5.1
+	github.com/kljensen/snowball v0.8.0
 	go.mongodb.org/mongo-driver v1.11.6
 )
 

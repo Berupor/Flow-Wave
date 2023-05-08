@@ -28,7 +28,7 @@ func NewMongoStorage(uri string, dbName string, collectionName string) (Storage,
 	}, nil
 }
 
-func (m *MongoStorage) CreateReview(review models.Review) error {
+func (m *MongoStorage) CreateReview(review models.ReviewCreate) error {
 	_, err := m.Collection.InsertOne(context.Background(), review)
 	return err
 }
