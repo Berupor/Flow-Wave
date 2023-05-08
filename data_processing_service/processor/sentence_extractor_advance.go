@@ -17,7 +17,6 @@ func ExtractSentencesAdvance(text string) []models.WeightSentence {
 	return result
 }
 
-// TextRank uses the TextRank algorithm to rank sentences
 func TextRank(sentences []models.WeightSentence, language string, damping, epsilon float64, maxIter int) []models.WeightSentence {
 	matrix := buildSimilarityMatrix(sentences, language)
 	rankVector := powerIteration(matrix, damping, epsilon, maxIter)
@@ -47,7 +46,6 @@ func buildSimilarityMatrix(sentences []models.WeightSentence, language string) [
 	return matrix
 }
 
-// similarity calculates the similarity score between two sentences
 func similarity(s1, s2, language string) float64 {
 	words1 := strings.Split(s1, " ")
 	words2 := strings.Split(s2, " ")
