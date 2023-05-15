@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 )
 
@@ -24,15 +25,23 @@ func NewRedisStorage(redisAddr string) *RedisStorage {
 	return &RedisStorage{Client: client}
 }
 
-func (rs *RedisStorage) GetLastExtractedTimestamp(ctx context.Context) (int64, error) {
-	lastExtractedTimestamp, err := rs.Client.Get(ctx, "last_extracted_timestamp").Int64()
-	if err != nil && err != redis.Nil {
-		return 0, err
-	}
-
-	return lastExtractedTimestamp, nil
+func (rs *RedisStorage) MarkAsLastProcessedID(id string) error {
+	_, err := rs.Client.Set(context.Background(), "etl:last_processed_id", id, 0).Result()
+	return err
 }
 
-func (rs *RedisStorage) UpdateLastExtractedTimestamp(ctx context.Context, timestamp int64) error {
-	return rs.Client.Set(ctx, "last_extracted_timestamp", timestamp, 0).Err()
+func (rs *RedisStorage) GetLastProcessedID() (primitive.ObjectID, error) {
+	id, err := rs.Client.Get(context.Background(), "etl:last_processed_id").Result()
+	if err == redis.Nil {
+		return primitive.NilObjectID, nil // No last processed ID exists
+	} else if err != nil {
+		return primitive.NilObjectID, err // Some other error occurred
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return primitive.NilObjectID, err // Failed to convert hex string to ObjectID
+	}
+
+	return objectID, nil // Successfully got the last processed ID
 }
