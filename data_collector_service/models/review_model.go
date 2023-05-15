@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -16,6 +17,7 @@ type Review struct {
 }
 
 func (r *Review) Validate() error {
+	fmt.Println(r.Timestamp)
 	if r.ProductID <= 0 {
 		return errors.New("product_id must be greater than 0")
 	}

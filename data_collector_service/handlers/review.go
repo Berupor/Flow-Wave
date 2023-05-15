@@ -19,7 +19,6 @@ func CreateReview(service services.EventService) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-
 		if err := c.BindJSON(&review); err != nil || review.Validate() != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "incorrect review data"})
 			return
