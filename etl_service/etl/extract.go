@@ -2,13 +2,13 @@ package etl
 
 import (
 	"context"
+	"etl/models/mongodb"
 	"etl/storage"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-
-	"etl/models/mongodb"
 )
 
 type Extractor interface {
@@ -20,15 +20,15 @@ type mongoExtractor struct {
 	RedisStorage *storage.RedisStorage
 }
 
-func NewMongoExtractor(mongoURI string, redisStorage *storage.RedisStorage) Extractor {
+func NewMongoExtractor(mongoURI string, storage *storage.RedisStorage) Extractor {
 	client, err := connectToMongoDB(mongoURI)
 	if err != nil {
-		log.Fatalf("faliled to connect to mongodb: %v", err)
+		log.Fatalf("failed to connect to mongodb: %v", err)
 	}
 
 	return &mongoExtractor{
 		Client:       client,
-		RedisStorage: redisStorage,
+		RedisStorage: storage,
 	}
 }
 
@@ -50,13 +50,19 @@ func connectToMongoDB(mongoUri string) (*mongo.Client, error) {
 func (me *mongoExtractor) GetReviews(ctx context.Context, dbName string, collectionName string) ([]mongodb.Review, error) {
 	collection := me.Client.Database(dbName).Collection(collectionName)
 
-	lastExtractedTimestamp, err := me.RedisStorage.GetLastExtractedTimestamp(ctx)
+	// Get the last processed _id from Redis
+	lastID, err := me.RedisStorage.GetLastProcessedID()
 	if err != nil {
 		return nil, err
 	}
 
-	filter := bson.M{"timestamp": bson.M{"$gt": lastExtractedTimestamp}}
-	findOptions := options.Find().SetLimit(100).SetSort(bson.M{"timestamp": 1})
+	filter := bson.M{}
+	if lastID != primitive.NilObjectID {
+		// Only get reviews with an _id greater than the last processed _id.
+		filter["_id"] = bson.M{"$gt": lastID}
+	}
+
+	findOptions := options.Find().SetLimit(100).SetSort(bson.D{{"_id", 1}})
 
 	cursor, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
@@ -66,15 +72,22 @@ func (me *mongoExtractor) GetReviews(ctx context.Context, dbName string, collect
 	defer cursor.Close(ctx)
 
 	var reviews []mongodb.Review
-	if err = cursor.All(ctx, &reviews); err != nil {
-		return nil, err
-	}
-
-	if len(reviews) > 0 {
-		newTimestamp := reviews[len(reviews)-1].Timestamp.Unix()
-		if err := me.RedisStorage.UpdateLastExtractedTimestamp(ctx, newTimestamp); err != nil {
+	for cursor.Next(ctx) {
+		var review mongodb.Review
+		if err = cursor.Decode(&review); err != nil {
 			return nil, err
 		}
+
+		// Only mark as the last processed after it's been successfully processed
+		if err = me.RedisStorage.MarkAsLastProcessedID(review.ID.Hex()); err != nil {
+			return nil, err
+		}
+
+		reviews = append(reviews, review)
+	}
+
+	if err = cursor.Err(); err != nil {
+		return nil, err
 	}
 
 	return reviews, nil
