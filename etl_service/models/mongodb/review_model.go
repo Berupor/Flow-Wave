@@ -1,6 +1,9 @@
 package mongodb
 
-import "time"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
+)
 
 type WeightSentence struct {
 	Text   string  `json:"text"`
@@ -8,12 +11,13 @@ type WeightSentence struct {
 }
 
 type Review struct {
-	ProductID int       `json:"product_id"`
-	PlaceID   int       `json:"place_id"`
-	AuthorID  int       `json:"author_id"`
-	Rating    float64   `json:"rating"`
-	Review    string    `json:"review"`
-	Timestamp time.Time `json:"timestamp"`
+	ID        primitive.ObjectID `bson:"_id"`
+	ProductID int                `json:"product_id"`
+	PlaceID   int                `json:"place_id"`
+	AuthorID  int                `json:"author_id"`
+	Rating    float64            `json:"rating"`
+	Review    string             `json:"review"`
+	Timestamp time.Time          `json:"timestamp"`
 
 	Keywords  []string         `json:"keywords"`
 	Sentences []WeightSentence `json:"sentences"`
