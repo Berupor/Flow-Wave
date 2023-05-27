@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func LoadConfig() ([]string, string, string) {
+func KafkaConfig() ([]string, string, string) {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatalf("error loading file .env: %v", err)
@@ -20,4 +20,16 @@ func LoadConfig() ([]string, string, string) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 
 	return brokers, topic, jwtSecret
+}
+
+func ApiConfig() string {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatalf("error loading file .env: %v", err)
+	}
+
+	host := os.Getenv("GO_DATA_COLLECTOR_HOST")
+	port := os.Getenv("GO_DATA_COLLECTOR_PORT")
+
+	return host + ":" + port
 }

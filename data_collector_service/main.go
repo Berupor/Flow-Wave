@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	brokers, topic, jwtSecret := core.LoadConfig()
+	brokers, topic, jwtSecret := core.KafkaConfig()
+	apiAddr := core.ApiConfig()
 
 	messageProducer, err := kafka.NewKafkaProducer(brokers, topic)
 	if err != nil {
@@ -18,5 +19,5 @@ func main() {
 	eventService := services.NewEventService(*messageProducer)
 
 	router := core.SetupRouter(eventService, jwtSecret)
-	router.Run()
+	router.Run(apiAddr)
 }
