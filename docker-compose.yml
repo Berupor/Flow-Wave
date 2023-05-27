@@ -1,6 +1,40 @@
 version: '3.9'
 services:
 
+  data-collector:
+    build:
+      context: .
+      dockerfile: data_collector_service/Dockerfile
+    env_file: ./.env
+    restart: always
+    ports:
+      - ${GO_DATA_COLLECTOR_PORT}:${GO_DATA_COLLECTOR_PORT}
+    depends_on:
+      - kafka
+      - zookeeper
+
+  data-processing:
+    build:
+      context: .
+      dockerfile: data_processing_service/Dockerfile
+    env_file: ./.env
+    restart: always
+    depends_on:
+      - kafka
+      - zookeeper
+      - mongodb
+
+  etl-service:
+    build:
+      context: .
+      dockerfile: etl_service/Dockerfile
+    env_file: ./.env
+    restart: always
+    depends_on:
+      - mongodb
+      - cache
+      - clickhouse
+
   kafka:
     image: confluentinc/cp-kafka:7.0.0
     ports:
@@ -23,14 +57,16 @@ services:
       retries: 3
 
   zookeeper:
+    restart: always
     image: confluentinc/cp-zookeeper:7.0.0
+    env_file: ./.env
     ports:
-      - "2181:2181"
+      - ${ZOOKEEPER_PORT}:${ZOOKEEPER_PORT}
     environment:
       ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_PORT}
     healthcheck:
-      test: nc -z localhost 2181 || exit -1
+      test: nc -z localhost ${ZOOKEEPER_PORT} || exit -1
       interval: 10s
       timeout: 5s
       retries: 3
@@ -48,25 +84,29 @@ services:
 
   mongodb:
     image: mongo:4.2-rc-bionic
-    hostname: mongodb
+    restart: always
+    env_file: ./.env
+    hostname: ${MONGO_HOST}
     container_name: mongodb
     expose:
-      - "27017"
+      - ${MONGO_PORT}
     ports:
-      - "27017:27017"
+      - ${MONGO_PORT}:${MONGO_PORT}
 
   cache:
     container_name: redis_db
+    env_file: ./.env
     image: redis:7.0.5-alpine
-    hostname: redis
+    hostname: ${REDIS_HOST}
     ports:
-      - "6379:6379"
+      - ${REDIS_PORT}:${REDIS_PORT}
     restart: always
 
   clickhouse:
+    hostname: ${CLICKHOUSE_HOST}
+    env_file: ./.env
     image: yandex/clickhouse-server:21.3.20-alpine
     ports:
-      - 8123:8123
-      - 9010:9010
+      - ${CLICKHOUSE_PORT}
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
